@@ -1,0 +1,17 @@
+{
+  "name": "wsdot_graph",
+  "version": "1.0.0",
+  "description": "Build graph from the sidewalks and perpendicular crosswalks",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "graph",
+    "wsdot",
+    "sidewalks",
+    "crosswalks"
+  ],
+  "author": "Andrey Chergik <achergik@gmail.com>",
+  "license": "ISC"
+}
