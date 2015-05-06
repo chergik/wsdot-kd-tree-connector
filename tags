@@ -1,0 +1,33 @@
+!_TAG_FILE_FORMAT	2	/extended format/
+!_TAG_FILE_SORTED	0	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Łukasz Korecki	/lukasz@korecki.me/
+!_TAG_PROGRAM_NAME	CoffeeTags	//
+!_TAG_PROGRAM_URL	https://github.com/lukaszkorecki/CoffeeTags	/GitHub repository/
+!_TAG_PROGRAM_VERSION	0.5.1	//
+LA	app.coffee	/^LA      = require 'look-alike'$/;"	o	line:7	language:coffee	object:window
+Point	app.coffee	/^class Point$/;"	c	line:15	language:coffee
+_computeECEFCoordinates	app.coffee	/^  _computeECEFCoordinates: () ->$/;"	f	line:35	language:coffee	object:Point
+argv	app.coffee	/^argv    = require('yargs').argv$/;"	o	line:1	language:coffee	object:window
+connectCrossingSegments	app.coffee	/^connectCrossingSegments = (sidewalksPath) ->$/;"	f	line:42	language:coffee	object:window
+constructor	app.coffee	/^  constructor: (@lat, @lon, @other=null) ->$/;"	f	line:28	language:coffee	object:Point
+exist	app.coffee	/^    throw new Error("Not all axis exist: #{@x}, #{@y}, #{@z}") unless @x and @y and @z$/;"	o	line:38	language:coffee	object:Point._computeECEFCoordinates
+fs	app.coffee	/^fs      = require 'fs'$/;"	o	line:4	language:coffee	object:window
+geo	app.coffee	/^geo     = require 'geodesy'$/;"	o	line:6	language:coffee	object:window
+geo2ecf	app.coffee	/^geo2ecf = require 'geodetic-to-ecef'$/;"	o	line:2	language:coffee	object:window
+getListOfsidewalks	app.coffee	/^getListOfsidewalks = (points) ->$/;"	f	line:80	language:coffee	object:window
+if	app.coffee	/^    if !typeof(@lat) is "number" or !typeof(@lon) is "number"$/;"	b	line:29	language:coffee
+la	app.coffee	/^  la = new LA(points, {attributes: ['x', 'y', 'z']})$/;"	o	line:66	language:coffee	object:connectCrossingSegments
+lat	app.coffee	/^  console.log {lat: vantagePoint.lat, lon: vantagePoint.lon}$/;"	o	line:69	language:coffee	object:connectCrossingSegments
+nearestNeighbours	app.coffee	/^  nearestNeighbours = getListOfsidewalks top10$/;"	o	line:74	language:coffee	object:connectCrossingSegments
+p1	app.coffee	/^    p1 = new Point(p1Lat, p1Lon)$/;"	o	line:59	language:coffee	object:connectCrossingSegments.sidewalk
+p2	app.coffee	/^    p2 = new Point(p2Lat, p2Lon)$/;"	o	line:60	language:coffee	object:connectCrossingSegments.sidewalk
+path	app.coffee	/^path    = require 'path'$/;"	o	line:3	language:coffee	object:window
+point1	app.coffee	/^  { point1: {lat: p.lat, lon: p.lon}, \\$/;"	o	line:81	language:coffee	object:getListOfsidewalks
+point2	app.coffee	/^    point2: {lat: p.other.lat, lon: p.other.lon}} for p in points$/;"	o	line:82	language:coffee	object:getListOfsidewalks.point1
+points	app.coffee	/^  points = []$/;"	o	line:46	language:coffee	object:connectCrossingSegments
+proj	app.coffee	/^proj    = require 'proj4'$/;"	o	line:5	language:coffee	object:window
+sidewalk	app.coffee	/^  for sidewalk in sidewalks when sidewalk.Shape_Length > 0$/;"	o	line:57	language:coffee	object:connectCrossingSegments
+sidewalks	app.coffee	/^  sidewalks = fs.readFileSync sidewalksPath$/;"	o	line:44	language:coffee	object:connectCrossingSegments
+sidewalksLatLonFile	app.coffee	/^sidewalksLatLonFile = argv.in$/;"	o	line:10	language:coffee	object:window
+top10	app.coffee	/^  top10 = la.query(points[0], {k: 10})$/;"	o	line:72	language:coffee	object:connectCrossingSegments
+vantagePoint	app.coffee	/^  vantagePoint = points[0]$/;"	o	line:68	language:coffee	object:connectCrossingSegments
