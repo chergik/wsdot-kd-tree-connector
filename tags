@@ -4,30 +4,69 @@
 !_TAG_PROGRAM_NAME	CoffeeTags	//
 !_TAG_PROGRAM_URL	https://github.com/lukaszkorecki/CoffeeTags	/GitHub repository/
 !_TAG_PROGRAM_VERSION	0.5.1	//
-LA	app.coffee	/^LA      = require 'look-alike'$/;"	o	line:7	language:coffee	object:window
-Point	app.coffee	/^class Point$/;"	c	line:15	language:coffee
-_computeECEFCoordinates	app.coffee	/^  _computeECEFCoordinates: () ->$/;"	f	line:35	language:coffee	object:Point
-argv	app.coffee	/^argv    = require('yargs').argv$/;"	o	line:1	language:coffee	object:window
-connectCrossingSegments	app.coffee	/^connectCrossingSegments = (sidewalksPath) ->$/;"	f	line:42	language:coffee	object:window
-constructor	app.coffee	/^  constructor: (@lat, @lon, @other=null) ->$/;"	f	line:28	language:coffee	object:Point
-exist	app.coffee	/^    throw new Error("Not all axis exist: #{@x}, #{@y}, #{@z}") unless @x and @y and @z$/;"	o	line:38	language:coffee	object:Point._computeECEFCoordinates
-fs	app.coffee	/^fs      = require 'fs'$/;"	o	line:4	language:coffee	object:window
-geo	app.coffee	/^geo     = require 'geodesy'$/;"	o	line:6	language:coffee	object:window
-geo2ecf	app.coffee	/^geo2ecf = require 'geodetic-to-ecef'$/;"	o	line:2	language:coffee	object:window
-getListOfsidewalks	app.coffee	/^getListOfsidewalks = (points) ->$/;"	f	line:80	language:coffee	object:window
-if	app.coffee	/^    if !typeof(@lat) is "number" or !typeof(@lon) is "number"$/;"	b	line:29	language:coffee
-la	app.coffee	/^  la = new LA(points, {attributes: ['x', 'y', 'z']})$/;"	o	line:66	language:coffee	object:connectCrossingSegments
-lat	app.coffee	/^  console.log {lat: vantagePoint.lat, lon: vantagePoint.lon}$/;"	o	line:69	language:coffee	object:connectCrossingSegments
-nearestNeighbours	app.coffee	/^  nearestNeighbours = getListOfsidewalks top10$/;"	o	line:74	language:coffee	object:connectCrossingSegments
-p1	app.coffee	/^    p1 = new Point(p1Lat, p1Lon)$/;"	o	line:59	language:coffee	object:connectCrossingSegments.sidewalk
-p2	app.coffee	/^    p2 = new Point(p2Lat, p2Lon)$/;"	o	line:60	language:coffee	object:connectCrossingSegments.sidewalk
-path	app.coffee	/^path    = require 'path'$/;"	o	line:3	language:coffee	object:window
-point1	app.coffee	/^  { point1: {lat: p.lat, lon: p.lon}, \\$/;"	o	line:81	language:coffee	object:getListOfsidewalks
-point2	app.coffee	/^    point2: {lat: p.other.lat, lon: p.other.lon}} for p in points$/;"	o	line:82	language:coffee	object:getListOfsidewalks.point1
-points	app.coffee	/^  points = []$/;"	o	line:46	language:coffee	object:connectCrossingSegments
-proj	app.coffee	/^proj    = require 'proj4'$/;"	o	line:5	language:coffee	object:window
-sidewalk	app.coffee	/^  for sidewalk in sidewalks when sidewalk.Shape_Length > 0$/;"	o	line:57	language:coffee	object:connectCrossingSegments
-sidewalks	app.coffee	/^  sidewalks = fs.readFileSync sidewalksPath$/;"	o	line:44	language:coffee	object:connectCrossingSegments
+@lat	app.coffee	/^    @lat = point.lat$/;"	o	line:43	language:coffee	object:Point.updateTo
+@latLon	app.coffee	/^    @latLon = new LatLon @lat, @lon$/;"	o	line:29	language:coffee	object:Point.constructor
+@latLon	app.coffee	/^    @latLon = new LatLon @lat, @lon$/;"	o	line:45	language:coffee	object:Point.updateTo
+@latLonVectors	app.coffee	/^    @latLonVectors = new LatLonVectors @lat, @lon$/;"	o	line:30	language:coffee	object:Point.constructor
+@latLonVectors	app.coffee	/^    @latLonVectors = new LatLonVectors @lat, @lon$/;"	o	line:46	language:coffee	object:Point.updateTo
+@lon	app.coffee	/^    @lon = point.lon$/;"	o	line:44	language:coffee	object:Point.updateTo
+@map	app.coffee	/^    @map = []$/;"	o	line:52	language:coffee	object:PointsMap.constructor
+@xyz	app.coffee	/^    @xyz = ([p.x, p.y, p.z] for p in @points)$/;"	o	line:73	language:coffee	object:PointsMap.getXyzPoints
+LatLon	app.coffee	/^LatLon        = require('geodesy').LatLonEllipsoidal$/;"	o	line:7	language:coffee	object:window
+LatLonVectors	app.coffee	/^LatLonVectors = require('geodesy').LatLonVectors$/;"	o	line:8	language:coffee	object:window
+Point	app.coffee	/^class Point$/;"	c	line:12	language:coffee
+PointsMap	app.coffee	/^class PointsMap$/;"	c	line:49	language:coffee
+_computeECEFCoordinates	app.coffee	/^  _computeECEFCoordinates: ->$/;"	f	line:35	language:coffee	object:Point
+addPoint	app.coffee	/^  addPoint: (point) ->$/;"	f	line:64	language:coffee	object:PointsMap
+all_neighbours	app.coffee	/^  all_neighbours = []$/;"	o	line:123	language:coffee	object:connectCrossingSegments
+argv	app.coffee	/^argv          = require('yargs').argv$/;"	o	line:1	language:coffee	object:window
+buildMap	app.coffee	/^  buildMap: ->$/;"	f	line:61	language:coffee	object:PointsMap
+connectCrossingSegments	app.coffee	/^connectCrossingSegments = (sidewalksPath) ->$/;"	f	line:91	language:coffee	object:window
+constructor	app.coffee	/^  constructor: (@lat, @lon, @other=null) ->$/;"	f	line:25	language:coffee	object:Point
+constructor	app.coffee	/^  constructor: (@points=[]) ->$/;"	f	line:51	language:coffee	object:PointsMap
+createKdTree	app.coffee	/^createKdTree  = require 'static-kdtree'$/;"	o	line:6	language:coffee	object:window
+findIntersection	app.coffee	/^findIntersection = (p1, p2) ->$/;"	f	line:188	language:coffee	object:window
+fs	app.coffee	/^fs            = require 'fs'$/;"	o	line:5	language:coffee	object:window
+geo2ecf	app.coffee	/^geo2ecf       = require 'geodetic-to-ecef'$/;"	o	line:3	language:coffee	object:window
+getKey	app.coffee	/^  getKey: (point) ->$/;"	f	line:55	language:coffee	object:PointsMap
+getKeyByXyz	app.coffee	/^  getKeyByXyz: (x, y ,z) ->$/;"	f	line:58	language:coffee	object:PointsMap
+getListOfsidewalks	app.coffee	/^getListOfsidewalks = (points) ->$/;"	f	line:178	language:coffee	object:window
+getListOfsidewalksByIndexes	app.coffee	/^getListOfsidewalksByIndexes = (pointsMap, pointsIndexes) ->$/;"	f	line:172	language:coffee	object:window
+getPoint	app.coffee	/^  getPoint: ->$/;"	f	line:68	language:coffee	object:PointsMap
+getPointObjects	app.coffee	/^getPointObjects = (pointsMap, points) ->$/;"	f	line:185	language:coffee	object:window
+getXyzPoints	app.coffee	/^  getXyzPoints: ->$/;"	f	line:72	language:coffee	object:PointsMap
+gju	app.coffee	/^gju           = require 'geojson-utils'$/;"	o	line:2	language:coffee	object:window
+if	app.coffee	/^      if intersection$/;"	b	line:147	language:coffee
+if	app.coffee	/^    if !typeof(@lat) is "number" or !typeof(@lon) is "number"$/;"	b	line:26	language:coffee
+if	app.coffee	/^  if intersection$/;"	b	line:194	language:coffee
+if	app.coffee	/^  if point.latLonVectors.distanceTo(intersection.latLonVectors) <$/;"	b	line:168	language:coffee
+intersection	app.coffee	/^      intersection = findIntersection(vantagePoint, point)$/;"	o	line:145	language:coffee	object:connectCrossingSegments.vantagePoint.
+intersection	app.coffee	/^    intersection = intersection[0]["coordinates"]$/;"	o	line:195	language:coffee	object:findIntersection
+intersection	app.coffee	/^  intersection = gju.lineStringsIntersect($/;"	o	line:189	language:coffee	object:findIntersection
+isAnyXyzCoordinatesZero	app.coffee	/^  isAnyXyzCoordinatesZero: ->$/;"	f	line:39	language:coffee	object:Point
+kdTree	app.coffee	/^  kdTree    = createKdTree xyzPoints$/;"	o	line:121	language:coffee	object:connectCrossingSegments
+modified_neighbours	app.coffee	/^  modified_neighbours = []$/;"	o	line:124	language:coffee	object:connectCrossingSegments
+nearestXyzPoints	app.coffee	/^    nearestXyzPoints  = kdTree.knn vantageXyzPoint, 10$/;"	o	line:130	language:coffee	object:connectCrossingSegments.vantagePoint
+neighbours	app.coffee	/^    neighbours        = getPointObjects pointsMap, nearestXyzPoints$/;"	o	line:131	language:coffee	object:connectCrossingSegments.vantagePoint
+p	app.coffee	/^    p = pointsMap.points[p]$/;"	o	line:174	language:coffee	object:getListOfsidewalksByIndexes.sidewalks
+p1	app.coffee	/^    p1 = new Point(p1Lat, p1Lon)$/;"	o	line:109	language:coffee	object:connectCrossingSegments.sidewalk
+p2	app.coffee	/^    p2 = new Point(p2Lat, p2Lon)$/;"	o	line:110	language:coffee	object:connectCrossingSegments.sidewalk
+path	app.coffee	/^path          = require 'path'$/;"	o	line:4	language:coffee	object:window
+point1	app.coffee	/^    { point1: {lat: p.lat, lon: p.lon}, \\$/;"	o	line:175	language:coffee	object:getListOfsidewalksByIndexes.sidewalks
+point1	app.coffee	/^    { point1: {lat: p.lat, lon: p.lon}, \\$/;"	o	line:182	language:coffee	object:getListOfsidewalks.sidewalks
+point1ToUpdate	app.coffee	/^        point1ToUpdate = pointClosestToIntersection(vantagePoint, intersection)$/;"	o	line:153	language:coffee	object:connectCrossingSegments.vantagePoint.
+point2	app.coffee	/^      point2: {lat: p.other.lat, lon: p.other.lon}}$/;"	o	line:176	language:coffee	object:getListOfsidewalksByIndexes.sidewalks.point1
+point2	app.coffee	/^      point2: {lat: p.other.lat, lon: p.other.lon}}$/;"	o	line:183	language:coffee	object:getListOfsidewalks.sidewalks.point1
+point2ToUpdate	app.coffee	/^        point2ToUpdate = pointClosestToIntersection(point, intersection)$/;"	o	line:154	language:coffee	object:connectCrossingSegments.vantagePoint.
+pointClosestToIntersection	app.coffee	/^pointClosestToIntersection = (point, intersection) ->$/;"	f	line:167	language:coffee	object:window
+points	app.coffee	/^  points = []$/;"	o	line:105	language:coffee	object:connectCrossingSegments
+pointsMap	app.coffee	/^  pointsMap = new PointsMap(points)$/;"	o	line:119	language:coffee	object:connectCrossingSegments
+sidewalk	app.coffee	/^  for sidewalk in sidewalks when sidewalk.Shape_Length > 0$/;"	o	line:107	language:coffee	object:connectCrossingSegments
+sidewalks	app.coffee	/^  sidewalks = for p in points$/;"	o	line:179	language:coffee	object:getListOfsidewalks
+sidewalks	app.coffee	/^  sidewalks = for p in pointsIndexes$/;"	o	line:173	language:coffee	object:getListOfsidewalksByIndexes
+sidewalks	app.coffee	/^  sidewalks = fs.readFileSync sidewalksPath$/;"	o	line:93	language:coffee	object:connectCrossingSegments
 sidewalksLatLonFile	app.coffee	/^sidewalksLatLonFile = argv.in$/;"	o	line:10	language:coffee	object:window
-top10	app.coffee	/^  top10 = la.query(points[0], {k: 10})$/;"	o	line:72	language:coffee	object:connectCrossingSegments
-vantagePoint	app.coffee	/^  vantagePoint = points[0]$/;"	o	line:68	language:coffee	object:connectCrossingSegments
+updateTo	app.coffee	/^  updateTo: (point) ->$/;"	f	line:42	language:coffee	object:Point
+vantagePoint	app.coffee	/^  for vantagePoint, vantagePointIndex in pointsMap.points$/;"	o	line:127	language:coffee	object:connectCrossingSegments
+vantageXyzPoint	app.coffee	/^    vantageXyzPoint   = xyzPoints[vantagePointIndex]$/;"	o	line:129	language:coffee	object:connectCrossingSegments.vantagePoint
+xyzPoints	app.coffee	/^  xyzPoints = pointsMap.getXyzPoints()$/;"	o	line:120	language:coffee	object:connectCrossingSegments

@@ -16,13 +16,16 @@
   "license": "ISC",
   "dependencies": {
     "fs": "0.0.2",
-    "geodesy": "^1.0.1",
+    "geodesy": "^1.0.2",
     "geodetic-to-ecef": "^1.0.0",
+    "geojson-utils": "^1.1.0",
+    "kdt": "^0.1.0",
     "leaflet": "^0.7.3",
     "look-alike": "^1.0.1",
     "path": "^0.11.14",
     "proj4": "^2.3.6",
     "proj4js": "^10.0.0",
+    "static-kdtree": "^1.0.1",
     "yargs": "^3.7.2"
   }
 }

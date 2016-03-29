@@ -1,16 +1,13 @@
-argv    = require('yargs').argv
-geo2ecf = require 'geodetic-to-ecef'
-path    = require 'path'
-fs      = require 'fs'
-proj    = require 'proj4'
-geo     = require 'geodesy'
-LA      = require 'look-alike'
-#proj    = require 'proj4'
+argv          = require('yargs').argv
+gju           = require 'geojson-utils'
+geo2ecf       = require 'geodetic-to-ecef'
+path          = require 'path'
+fs            = require 'fs'
+createKdTree  = require 'static-kdtree'
+LatLon        = require('geodesy').LatLonEllipsoidal
+LatLonVectors = require('geodesy').LatLonVectors
 
 sidewalksLatLonFile = argv.in
-
-console.log sidewalksLatLonFile
-
 
 class Point
 
@@ -29,21 +26,72 @@ class Point
     if !typeof(@lat) is "number" or !typeof(@lon) is "number"
       throw new Error("Lat and lon must be present")
 
+    @latLon = new LatLon @lat, @lon
+    @latLonVectors = new LatLonVectors @lat, @lon
+
     @_computeECEFCoordinates()
     @
 
-  _computeECEFCoordinates: () ->
+  _computeECEFCoordinates: ->
     # Do not care about elevation (may be consider later).
     [@x, @y, @z] = geo2ecf @lat, @lon
-    throw new Error("Not all axis exist: #{@x}, #{@y}, #{@z}") unless @x and @y and @z
+
+  isAnyXyzCoordinatesZero: ->
+    not (@x and @y and @z)
+
+  updateTo: (point) ->
+    @lat = point.lat
+    @lon = point.lon
+    @latLon = new LatLon @lat, @lon
+    @latLonVectors = new LatLonVectors @lat, @lon
+    @_computeECEFCoordinates()
+
+class PointsMap
+
+  constructor: (@points=[]) ->
+    @map = []
+    @buildMap()
+
+  getKey: (point) ->
+    "#{point.x}|#{point.y}|#{point.z}"
+
+  getKeyByXyz: (x, y ,z) ->
+    "#{x}|#{y}|#{z}"
+
+  buildMap: ->
+    @map[@getKey point] = point for point in @points
+
+  addPoint: (point) ->
+    @points.push point
+    @map[@getKey point] = point
+
+  getPoint: ->
+    [x, y, z] = arguments
+    @map[@getKeyByXyz(x, y, z)]
+
+  getXyzPoints: ->
+    @xyz = ([p.x, p.y, p.z] for p in @points)
 
 
-
+# The sidewalks data is dirty in a sence of crosswalks being represented by the
+# adjacent sections, which almost never end/start at the same point and cannot be
+# used to build a directed graph (which later could have being used to build shortest
+# paths using preferably Dijkstra or Bellman-Ford).
+#
+# Current algorithm connect the beginning and the end of intersecting adjacent segments of the
+# sidewalks at each intersection. It does so by converting lat/lon to the Earch Centered Coordinated
+# in 3D to later put those into the KD-Tree (i.e. 3D-Tree). Then it go through points of the sidewalks
+# and for each search the neighboring points (i.e. candidates for the intersection/connection).
+# KD-Tree is very efficient for such search operations (i.e. log(n) on average and linear otherwise).
+# Once neighboring points found, we examine corresponding segments for intersection and connect them if
+# positive.
+#
+# The better solution would be to use Machine Learning (e.g. train a classifier
+# using train/validation/test split and run predictions on data).
 connectCrossingSegments = (sidewalksPath) ->
 
   sidewalks = fs.readFileSync sidewalksPath
   sidewalks = JSON.parse sidewalks
-  points = []
 
   # Get lat/lon for point-1 and lat/lon for point-2.
   # Exapmle:
@@ -54,160 +102,101 @@ connectCrossingSegments = (sidewalksPath) ->
   # },
   # ...
   # ]
+  points = []
+  # For all sidewalks (but avoid those with zero length).
   for sidewalk in sidewalks when sidewalk.Shape_Length > 0
     [[p1Lon, p1Lat], [p2Lon, p2Lat]] = sidewalk['Shape'][5]['paths'][0] # Line.
     p1 = new Point(p1Lat, p1Lon)
     p2 = new Point(p2Lat, p2Lon)
+
+    # Avoid trash data.
+    continue if p1.isAnyXyzCoordinatesZero() or p2.isAnyXyzCoordinatesZero()
+
     [p1.other, p2.other] = [p2, p1]
     points.push p1
     points.push p2
 
-  # Create KD-Tree of all points.
-  la = new LA(points, {attributes: ['x', 'y', 'z']})
+  pointsMap = new PointsMap(points)
+  xyzPoints = pointsMap.getXyzPoints()
+  kdTree    = createKdTree xyzPoints
 
-  vantagePoint = points[0]
-  console.log {lat: vantagePoint.lat, lon: vantagePoint.lon}
+  all_neighbours = []
+  modified_neighbours = []
 
-  # Test. Find nearest neighbor for the first point in the array.
-  top10 = la.query(points[0], {k: 10})
+  # Later will do it for each point.
+  for vantagePoint, vantagePointIndex in pointsMap.points
+    process.stderr.write "Processing point ##{vantagePointIndex + 1}\n"
+    vantageXyzPoint   = xyzPoints[vantagePointIndex]
+    nearestXyzPoints  = kdTree.knn vantageXyzPoint, 10
+    neighbours        = getPointObjects pointsMap, nearestXyzPoints
 
-  nearestNeighbours = getListOfsidewalks top10
+    # For given list of points each with the reference to the OTHER point,
+    # and the vantage point with the OTHER reference too, iterate through
+    # list of points except the vantage point and vantage point.OTHER and
+    # compute the intersection of current point's line segment and the
+    # vantage point line segment. If intersection found - stop.
+    # Better to use arches intersection equation.
+    #console.log "VP: #{vantagePoint.latLon.lat}, #{vantagePoint.latLon.lon}," +
+    #            " #{vantagePoint.other.latLon.lat}, #{vantagePoint.other.latLon.lon}"
 
-  console.log JSON.stringify(nearestNeighbours, null, 4)
+    for point in neighbours when vantagePoint != point &&
+                                 vantagePoint.other != point
 
-  # If lines do intersect => store them as [lineA: [p1, p2], lineB: [p1, p2], intersect: [p1, p2]
+      intersection = findIntersection(vantagePoint, point)
+
+      if intersection
+
+        # Update two line segments to end at the same intersecting point.
+        # Find the point from the line1 and then closest point from the line2
+        # to the point of the intersection.
+        # Set both to the point of intersection.
+        point1ToUpdate = pointClosestToIntersection(vantagePoint, intersection)
+        point2ToUpdate = pointClosestToIntersection(point, intersection)
+
+        #console.log "Point1ToUpdate: #{JSON.stringify point1ToUpdate.latLonVectors, null, 4}, Point2ToUpdate: #{JSON.stringify point2ToUpdate.latLonVectors, null, 4}"
+
+        point1ToUpdate.updateTo intersection
+        point2ToUpdate.updateTo intersection
+
+        #console.log "Point1ToUpdate: #{JSON.stringify point1ToUpdate.latLonVectors, null, 4}, Point2ToUpdate: #{JSON.stringify point2ToUpdate.latLonVectors, null, 4}"
+
+        break
+
+  console.log JSON.stringify getListOfsidewalks(pointsMap.points), null, 4
+
+pointClosestToIntersection = (point, intersection) ->
+  if point.latLonVectors.distanceTo(intersection.latLonVectors) <
+     point.other.latLonVectors.distanceTo(intersection.latLonVectors)
+  then point else point.other
+
+getListOfsidewalksByIndexes = (pointsMap, pointsIndexes) ->
+  sidewalks = for p in pointsIndexes
+    p = pointsMap.points[p]
+    { point1: {lat: p.lat, lon: p.lon}, \
+      point2: {lat: p.other.lat, lon: p.other.lon}}
 
 getListOfsidewalks = (points) ->
-  { point1: {lat: p.lat, lon: p.lon}, \
-    point2: {lat: p.other.lat, lon: p.other.lon}} for p in points
+  sidewalks = for p in points
+    #process.stderr.write "p.latLon: #{p.latLon}\n"
+    #process.stderr.write "p.latLon.other: #{p.other.latLon}\n"
+    { point1: {lat: p.lat, lon: p.lon}, \
+      point2: {lat: p.other.lat, lon: p.other.lon}}
 
+getPointObjects = (pointsMap, points) ->
+  (pointsMap.points[pIndex] for pIndex in points)
 
-  #getListOfsidewalks = (points) ->
-  #  result = []
-  #  for p in points
-  #    p1 = proj('GOOGLE', 'WGS84', [p.lat, p.lon])
-  #    p2 = proj('GOOGLE', 'WGS84', [p.other.lat, p.other.lon])
-  #    console.log p1
-  #    result.push(
-  #      point1: {lat: p1.lat, lon: p1.lon}
-  #      point2: {lat: p2.lat, lon: p2.lon} )
-  #  result
+findIntersection = (p1, p2) ->
+  intersection = gju.lineStringsIntersect(
+    { "type": "LineString", "coordinates": [[p1.lon, p1.lat],
+                                            [p1.other.lon, p1.other.lat]] },
+    { "type": "LineString", "coordinates": [[p2.lon, p2.lat], [p2.other.lon, p2.other.lat]] })
+
+  if intersection
+    intersection = intersection[0]["coordinates"]
+    #process.stderr.write JSON.stringify intersection, null, 4
+    new Point intersection[0], intersection[1]
+  else
+    null
 
 connectCrossingSegments(sidewalksLatLonFile)
 
-
-# Load file.
-# Parse it from JSON.
-# Clean it from 0 distances.
-# Add atributes to each sidewalk: ecef => [x, y, z]
-# *** We need to convert from geodetic coordinates in order
-# *** to search for nearest neighbor in euclidean 3D space using kd-tree.
-# Create a hashmap to store each sidewalk's endpointis.
-# Sidewalk endpoint must refer to a sidewalk.
-# {point_x_y_z => sidewalk} for connecting neighboring sidewalks
-# to the common intersection point..
-# [{x: 1, y:2, z:3}, ...] <-- for KD-Tree nearest neighbor search.
-#
-#      2
-#      |     |
-#    1-+-----+- <- sidewalk A
-#      |     |
-#      |     |
-#     -+-----+-
-#      |     |
-#      ^
-#      |
-#  sidewalk B
-#
-# The nearest neighbor for the point 1 is going to be the point 2.
-# This is the point that corresponds to one of the ends of the
-# sidewalk B.
-# Knowing that these two sidewalks are connected we can calculate the
-# intersection of these two lines (arches actually) on the sphere using geodesy.
-#
-# After intersection for two neighboring points is found we can
-# add the point and the corresponding sidewalks to the hashmap:
-# {intersection_point_x_y_z => [sidewalk1, sidewalk2]}
-# After the hashmap is built we can create a directed two way graph
-# and connects its vertices accordingly to the hashmap. Each edge
-# must have a weight hashmap with the length of the path and the
-# directional altitude of the sidewalk.
-#
-# The rest is to connect the sidewalks by the crosswalks (use nearest
-# neighbor search for the two nearest neighbors). The weight of the
-# crosswalk edges must be zero.
-#
-###
-#
-{ sid: 45058,
-    id: '45058',
-    position: null,
-    created_at: null,
-    created_meta: null,
-    updated_at: 0,
-    updated_meta: null,
-    meta: null,
-    OBJECTID: '45058',
-    Shape:
-     [ null,
-       '47.56492610400005',
-       '-122.37618764899992',
-       null,
-       false,
-       [Object] ],
-    COMPKEY: '327118',
-    COMPTYPE: '97',
-    SEGKEY: '10371',
-    DISTANCE: '23',
-    ENDDISTANCE: '193',
-    WIDTH: '37.5',
-    UNITID: 'SDW-32792',
-    UNITTYPE: 'SDW',
-    UNITDESC: 'FAUNTLEROY WAY SW BETWEEN WEST SEATTLE BR EB AND SW GENESEE W ST, SE SIDE                                                                                                                                                                                      ',
-    ADDBY: 'SW DATA LOAD',
-    ADDDTTM: 1190852254,
-    ASBLT: null,
-    CONDITION: 'FAIR',
-    CONDITION_ASSESSMENT_DATE: 1185951600,
-    CURBTYPE: '410C',
-    CURRENT_STATUS: 'INSVC',
-    CURRENT_STATUS_DATE: 1280600840,
-    FILLERTYPE: 'TR/AC',
-    FILLERWID: '54',
-    INSTALL_DATE: null,
-    LEN: null,
-    LENUOM: 'Feet',
-    SW_WIDTH: '60',
-    MAINTAINED_BY: ' ',
-    MATL: ' ',
-    MODBY: 'SDW_CONDITION_UPDATES',
-    MODDTTM: 1280600804,
-    OWNERSHIP: ' ',
-    SIDE: 'SE',
-    SURFTYPE: 'PCC',
-    BUILDERCD: ' ',
-    CURBRAMPHIGHYN: 'N',
-    CURBRAMPMIDYN: 'N',
-    CURBRAMPLOWYN: 'Y',
-    INVALIDSWRECORDYN: 'N',
-    MAINTBYRDWYSTRUCTYN: 'N',
-    NOTSWCANDIDATEYN: 'N',
-    SWINCOMPLETEYN: 'N',
-    INCSTPOINTLOWEND: '0',
-    INCSTPOINTUNKNOWN: 'N',
-    MULTIPLESURFACEYN: 'N',
-    GSITYPECD: ' ',
-    HANSEN7ID: '067700410SE',
-    ATTACHMENT_1: '\\\\sdotnasvfa\\sdot_vol1\\H8\\PROD\\ATTACHMENTS\\IMAGES\\SIDEWALKS\\A4070721002855.JPG',
-    ATTACHMENT_2: null,
-    ATTACHMENT_3: null,
-    ATTACHMENT_4: null,
-    ATTACHMENT_5: null,
-    ATTACHMENT_6: null,
-    ATTACHMENT_7: null,
-    ATTACHMENT_8: null,
-    ATTACHMENT_9: null,
-    DATE_MVW_LAST_UPDATED: 1428203969,
-    Shape_Length: '169.369278508794110393864684738218784332275390625' }
-#
-###
